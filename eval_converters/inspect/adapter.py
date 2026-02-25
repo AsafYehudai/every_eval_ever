@@ -466,7 +466,7 @@ class InspectAIAdapter(BaseEvaluationAdapter):
 
         evaluation_name = eval_spec.dataset.name or eval_spec.task
 
-        parent_eval_output_dir = metadata_args.get('parent_eval_output_dir')
+        parent_eval_output_dir = metadata_args.get("parent_eval_output_dir", "data")
         if raw_eval_log.samples and parent_eval_output_dir:
             if "/" in model_info.id:
                 model_dev, model_name = model_info.id.split("/", 1)
