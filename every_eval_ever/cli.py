@@ -9,14 +9,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from every_eval_ever.converters.helm.adapter import HELMAdapter
-from every_eval_ever.converters.inspect.adapter import InspectAIAdapter
-from every_eval_ever.converters.lm_eval.adapter import LMEvalAdapter
-from every_eval_ever.converters.lm_eval.instance_level_adapter import LMEvalInstanceLevelAdapter
-from every_eval_ever.converters.lm_eval.utils import find_samples_file
-from every_eval_ever.check_duplicate_entries import main as check_duplicates_main
-from every_eval_ever.eval_types import EvaluationLog, EvaluatorRelationship
-from every_eval_ever.validate import main as validate_main
+EVALUATOR_RELATIONSHIP_CHOICES = [
+    "first_party",
+    "third_party",
+    "collaborative",
+    "other",
+]
 
 
 def _common_metadata(args: argparse.Namespace) -> dict[str, Any]:
@@ -31,7 +29,7 @@ def _common_metadata(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def _output_dir_for_log(base_output: Path, log: EvaluationLog) -> Path:
+def _output_dir_for_log(base_output: Path, log: Any) -> Path:
     dataset = "unknown"
     if log.evaluation_results and log.evaluation_results[0].source_data:
         dataset = log.evaluation_results[0].source_data.dataset_name or "unknown"
@@ -44,7 +42,7 @@ def _output_dir_for_log(base_output: Path, log: EvaluationLog) -> Path:
     return out_dir
 
 
-def _write_log(log: EvaluationLog, base_output: Path, eval_uuid: str | None = None) -> Path:
+def _write_log(log: Any, base_output: Path, eval_uuid: str | None = None) -> Path:
     out_dir = _output_dir_for_log(base_output, log)
     eval_uuid = eval_uuid or str(uuid.uuid4())
     out_file = out_dir / f"{eval_uuid}.json"
@@ -54,6 +52,12 @@ def _write_log(log: EvaluationLog, base_output: Path, eval_uuid: str | None = No
 
 
 def _cmd_convert_lm_eval(args: argparse.Namespace) -> int:
+    from every_eval_ever.converters.lm_eval.adapter import LMEvalAdapter
+    from every_eval_ever.converters.lm_eval.instance_level_adapter import (
+        LMEvalInstanceLevelAdapter,
+    )
+    from every_eval_ever.converters.lm_eval.utils import find_samples_file
+
     adapter = LMEvalAdapter()
     metadata = _common_metadata(args)
     if args.inference_engine:
@@ -96,6 +100,8 @@ def _cmd_convert_lm_eval(args: argparse.Namespace) -> int:
 
 
 def _cmd_convert_inspect(args: argparse.Namespace) -> int:
+    from every_eval_ever.converters.inspect.adapter import InspectAIAdapter
+
     adapter = InspectAIAdapter()
     metadata = _common_metadata(args)
     metadata["file_uuid"] = str(uuid.uuid4())
@@ -117,6 +123,8 @@ def _cmd_convert_inspect(args: argparse.Namespace) -> int:
 
 
 def _cmd_convert_helm(args: argparse.Namespace) -> int:
+    from every_eval_ever.converters.helm.adapter import HELMAdapter
+
     adapter = HELMAdapter()
     metadata = _common_metadata(args)
     metadata["file_uuid"] = str(uuid.uuid4())
@@ -160,8 +168,8 @@ def build_parser() -> argparse.ArgumentParser:
         source_parser.add_argument("--source-organization-name", default="unknown")
         source_parser.add_argument(
             "--evaluator-relationship",
-            default=EvaluatorRelationship.third_party.value,
-            choices=[e.value for e in EvaluatorRelationship],
+            default="third_party",
+            choices=EVALUATOR_RELATIONSHIP_CHOICES,
         )
         source_parser.add_argument("--source-organization-url", default=None)
         source_parser.add_argument("--source-organization-logo-url", default=None)
@@ -181,6 +189,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "validate":
+        from every_eval_ever.validate import main as validate_main
+
         return validate_main([
             *args.paths,
             "--schema",
@@ -189,13 +199,15 @@ def main(argv: list[str] | None = None) -> int:
         ])
 
     if args.command == "check-duplicates":
+        from every_eval_ever.check_duplicate_entries import (
+            main as check_duplicates_main,
+        )
+
         return check_duplicates_main(args.paths)
 
     if args.command == "convert":
         if getattr(args, "dst", "eee") != "eee":
             raise ValueError("Only destination 'eee' is currently supported")
-
-        args.evaluator_relationship = EvaluatorRelationship(args.evaluator_relationship)
 
         if args.source == "lm_eval":
             return _cmd_convert_lm_eval(args)
