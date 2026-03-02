@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List
 
-from eval_types import (
+from every_eval_ever.eval_types import (
     EvalLibrary,
     EvaluationLog,
     EvaluationResult,

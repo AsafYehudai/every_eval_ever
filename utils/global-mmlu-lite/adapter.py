@@ -12,7 +12,7 @@ Usage:
 import time
 from typing import List
 
-from eval_types import (
+from every_eval_ever.eval_types import (
     ConfidenceInterval,
     EvalLibrary,
     EvaluationLog,

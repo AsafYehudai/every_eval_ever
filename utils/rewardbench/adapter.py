@@ -16,7 +16,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from eval_types import (
+from every_eval_ever.eval_types import (
     EvalLibrary,
     EvaluationLog,
     EvaluationResult,
