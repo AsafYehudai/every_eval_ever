@@ -12,7 +12,6 @@ Usage:
     uv run python -m utils.terminal_bench_2.adapter
 """
 
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -269,7 +268,7 @@ def convert_entry(entry: dict, retrieved_timestamp: str) -> EvaluationLog:
     )
 
     return EvaluationLog(
-        schema_version="0.2.0",
+        schema_version="0.2.2",
         evaluation_id=eval_id,
         retrieved_timestamp=retrieved_timestamp,
         evaluation_timestamp=entry["date"],
@@ -294,20 +293,6 @@ def convert_entry(entry: dict, retrieved_timestamp: str) -> EvaluationLog:
     )
 
 
-def save_as_v020(eval_log: EvaluationLog, output_dir: str, org_slug: str, model_slug: str) -> Path:
-    """Save an EvaluationLog as schema v0.2.0 JSON (without eval_library)."""
-    from helpers import sanitize_filename
-
-    data = json.loads(eval_log.model_dump_json(exclude_none=True))
-    data.pop("eval_library", None)
-
-    dir_path = Path(output_dir) / sanitize_filename(org_slug) / sanitize_filename(model_slug)
-    dir_path.mkdir(parents=True, exist_ok=True)
-    filepath = dir_path / f"{uuid.uuid4()}.json"
-    filepath.write_text(json.dumps(data, indent=2) + "\n")
-    return filepath
-
-
 def main():
     retrieved_timestamp = str(time.time())
     count = 0
@@ -317,7 +302,7 @@ def main():
             eval_log = convert_entry(entry, retrieved_timestamp)
             org_slug = get_org_slug(entry["model_org"])
             model_slug = get_model_slug(entry["model"])
-            filepath = save_as_v020(eval_log, OUTPUT_DIR, org_slug, model_slug)
+            filepath = save_evaluation_log(eval_log, OUTPUT_DIR, org_slug, model_slug)
             print(f"[{entry['rank']:3d}] {filepath}")
             count += 1
         except Exception as e:
