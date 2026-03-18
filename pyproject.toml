@@ -1,6 +1,6 @@
 [project]
 name = "every-eval-ever"
-version = "0.1.0"
+version = "0.2.2"
 description = "Every Eval Ever"
 readme = "README.md"
 authors = [

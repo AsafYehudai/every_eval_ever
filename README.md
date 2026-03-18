@@ -98,7 +98,7 @@ Note: Each file can contain multiple individual results related to one model. Se
 
 ### Instance-Level Data
 
-For evaluations that include per-sample results, the individual results should be stored in a companion `{uuid}.jsonl` file in the same folder (one JSONL per JSON, sharing the same UUID). The aggregate JSON file refers to its JSONL via the `detailed_evaluation_results` field. The instance-level schema ([`instance_level_eval.schema.json`](instance_level_eval.schema.json)) supports three interaction types:
+For evaluations that include per-sample results, the individual results should be stored in a companion `{uuid}_samples.jsonl` file in the same folder (one JSONL per JSON, sharing the same UUID). The aggregate JSON file refers to its JSONL via the `detailed_evaluation_results` field. The instance-level schema ([`instance_level_eval.schema.json`](instance_level_eval.schema.json)) supports three interaction types:
 
 - **`single_turn`**: Standard QA, MCQ, classification — uses `output` object
 - **`multi_turn`**: Conversational evaluations with multiple exchanges — uses `messages` array
@@ -148,20 +148,20 @@ Validation uses Pydantic models generated from the JSON schemas. This enforces b
 
 ### Validate files with `validate.py`
 
-Validate aggregate `.json` and instance-level `.jsonl` files:
+Validate aggregate `.json` and instance-level `_samples.jsonl` files:
 
 ```sh
 # Single file
 uv run python validate.py data/benchmark/dev/model/uuid.json
 
 # Instance-level JSONL
-uv run python validate.py data/benchmark/dev/model/uuid.jsonl
+uv run python validate.py data/benchmark/dev/model/uuid_samples.jsonl
 
 # Entire directory (recurses into subdirectories)
 uv run python validate.py data/benchmark/dev/model/
 
 # Multiple paths
-uv run python validate.py file1.json file2.jsonl data/
+uv run python validate.py file1.json file2_samples.jsonl data/
 ```
 
 File type is determined by extension: `.json` validates against `EvaluationLog`, `.jsonl` validates each line against `InstanceLevelEvaluationLog`.
@@ -219,7 +219,7 @@ data/
     └── {developer_name}/
         └── {model_name}/
             ├── {uuid}.json          # aggregate results
-            └── {uuid}.jsonl         # instance-level results (optional)
+            └── {uuid}_samples.jsonl         # instance-level results (optional)
 ```
 
 Example evaluations included in the schema v0.2 release:
@@ -238,7 +238,7 @@ Example evaluations included in the schema v0.2 release:
 
 Schemas: [`eval.schema.json`](eval.schema.json) (aggregate) · [`instance_level_eval.schema.json`](instance_level_eval.schema.json) (per-sample JSONL)
 
-Each evaluation has its own directory under [`data/`](https://huggingface.co/datasets/evaleval/EEE_datastore/tree/main/data) on the Hugging Face datastore. Within each evaluation, models are organized by developer and model name. Instance-level data is stored in optional `{uuid}.jsonl` files alongside aggregate `{uuid}.json` results.
+Each evaluation has its own directory under [`data/`](https://huggingface.co/datasets/evaleval/EEE_datastore/tree/main/data) on the Hugging Face datastore. Within each evaluation, models are organized by developer and model name. Instance-level data is stored in optional `{uuid}_samples.jsonl` files alongside aggregate `{uuid}.json` results.
 
 ## 📋 The Schema in Practice
 
@@ -337,3 +337,4 @@ Qualifying contributors will be invited as co-authors on the shared task paper.
   note    = {Schema Release}
 }
 ```
+

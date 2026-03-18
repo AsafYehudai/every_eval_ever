@@ -2,14 +2,14 @@
 Pydantic-based validation for EEE schema files.
 
 Validates aggregate (.json) files against EvaluationLog and
-instance-level (.jsonl) files against InstanceLevelEvaluationLog.
+instance-level (_samples.jsonl) files against InstanceLevelEvaluationLog.
 
 Usage:
     uv run python validate.py data/benchmark/dev/model/uuid.json
-    uv run python validate.py data/benchmark/dev/model/uuid.jsonl
+    uv run python validate.py data/benchmark/dev/model/uuid_samples.jsonl
     uv run python validate.py data/benchmark/dev/model/   # directory recurse
     uv run python validate.py --format json data/*.json
-    uv run python validate.py --max-errors 10 data/*.jsonl
+    uv run python validate.py --max-errors 10 data/*_samples.jsonl
 """
 
 from __future__ import annotations
