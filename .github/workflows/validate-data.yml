@@ -41,4 +41,4 @@ jobs:
         run: uv run python -m every_eval_ever check-duplicates data
 
       - name: Validate data
-        run: uv run python -m every_eval_ever validate data --schema aggregate
+        run: uv run python -m every_eval_ever validate data

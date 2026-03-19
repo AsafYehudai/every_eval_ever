@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from validate import (
+from every_eval_ever.validate import (
     ValidationReport,
     expand_paths,
     validate_aggregate,
