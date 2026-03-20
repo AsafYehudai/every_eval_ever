@@ -1,0 +1,44 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build package
+        run: uv build
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "## Changes in $TAG" > release_notes.txt
+          echo "" >> release_notes.txt
+          echo "Built from commit: ${{ github.sha }}" >> release_notes.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_notes.outputs.tag_name }}
+          name: Release ${{ steps.release_notes.outputs.tag_name }}
+          body_path: release_notes.txt
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
