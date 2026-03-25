@@ -168,7 +168,8 @@ def _cmd_convert_helm(args: argparse.Namespace) -> int:
     )
     output_dir = Path(args.output_dir)
     for log in logs:
-        print(_write_log(log, output_dir))
+        eval_uuid = _extract_file_uuid_from_detailed_results(log)
+        print(_write_log(log, output_dir, eval_uuid=eval_uuid))
 
     print(f'Converted {len(logs)} evaluation log(s).')
     return 0
