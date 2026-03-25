@@ -1,19 +1,10 @@
 import json
 import re
 from pathlib import Path
-
-from pydantic import BaseModel
 from typing import Any, Dict, List, Type
 
-from every_eval_ever.eval_types import (
-    AgenticEvalConfig,
-    EvaluationResult,
-    GenerationArgs,
-    GenerationConfig,
-    InferenceEngine,
-    MetricConfig,
-    ModelInfo
-)
+from pydantic import BaseModel
+
 from every_eval_ever.converters.common.utils import get_model_organization_info
 from every_eval_ever.converters.inspect.supplemental_eval_details import (
     SupplementalAgenticEvalConfig,
@@ -21,6 +12,15 @@ from every_eval_ever.converters.inspect.supplemental_eval_details import (
     SupplementalForEvaluationResults,
     SupplementalGenerationConfig,
     SupplementalSourceData,
+)
+from every_eval_ever.eval_types import (
+    AgenticEvalConfig,
+    EvaluationResult,
+    GenerationArgs,
+    GenerationConfig,
+    InferenceEngine,
+    MetricConfig,
+    ModelInfo,
 )
 
 

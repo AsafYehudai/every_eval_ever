@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 import uuid
 from argparse import ArgumentParser
 from enum import Enum
@@ -22,15 +21,13 @@ except ImportError as exc:
         'Install it with: uv sync --extra inspect'
     ) from exc
 
+from every_eval_ever.converters.common.utils import (
+    extract_file_uuid_from_detailed_results,
+)
 from every_eval_ever.eval_types import EvaluationLog, EvaluatorRelationship
 from every_eval_ever.instance_level_types import InstanceLevelEvaluationLog
 
 logger = logging.getLogger(__name__)
-
-_UUID_FILE_RE = re.compile(
-    r'(?P<uuid>[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})(?:_samples)?(?:\.jsonl?)?$',
-    re.IGNORECASE,
-)
 
 
 def parse_args():
@@ -174,14 +171,7 @@ def save_evaluation_log(
 
 
 def extract_file_uuid_from_output(unified_output: EvaluationLog) -> str | None:
-    detailed = unified_output.detailed_evaluation_results
-    if detailed and detailed.file_path:
-        filename = Path(str(detailed.file_path)).name
-        uuid_match = _UUID_FILE_RE.search(filename)
-        if uuid_match:
-            return uuid_match.group('uuid')
-
-    return None
+    return extract_file_uuid_from_detailed_results(unified_output)
 
 
 if __name__ == '__main__':

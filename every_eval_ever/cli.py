@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import uuid
 from pathlib import Path
 from typing import Any
+
+from every_eval_ever.converters.common.utils import (
+    extract_file_uuid_from_detailed_results as _extract_file_uuid,
+)
 
 EVALUATOR_RELATIONSHIP_CHOICES = [
     'first_party',
@@ -16,11 +19,6 @@ EVALUATOR_RELATIONSHIP_CHOICES = [
     'collaborative',
     'other',
 ]
-
-_UUID_FILE_RE = re.compile(
-    r'(?P<uuid>[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})(?:_samples)?(?:\.jsonl?)?$',
-    re.IGNORECASE,
-)
 
 
 def _common_metadata(args: argparse.Namespace) -> dict[str, Any]:
@@ -64,20 +62,7 @@ def _write_log(
 
 
 def _extract_file_uuid_from_detailed_results(log: Any) -> str | None:
-    detailed = getattr(log, 'detailed_evaluation_results', None)
-    if not detailed:
-        return None
-
-    file_path = getattr(detailed, 'file_path', None)
-    if not file_path:
-        return None
-
-    filename = Path(str(file_path)).name
-    uuid_match = _UUID_FILE_RE.search(filename)
-    if uuid_match:
-        return uuid_match.group('uuid')
-
-    return None
+    return _extract_file_uuid(log)
 
 
 def _cmd_convert_lm_eval(args: argparse.Namespace) -> int:
