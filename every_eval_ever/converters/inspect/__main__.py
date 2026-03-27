@@ -12,7 +12,9 @@ try:
     from inspect_ai.log import list_eval_logs
 
     from every_eval_ever.converters.inspect.adapter import InspectAIAdapter
-    from every_eval_ever.converters.inspect.supplemental_eval_details import SupplementalEvalDetails
+    from every_eval_ever.converters.inspect.supplemental_eval_details import (
+        SupplementalEvalDetails,
+    )
 except ImportError as exc:
     raise SystemExit(
         "The 'inspect-ai' package is required to use the Inspect AI converter.\n"
@@ -165,16 +167,6 @@ def save_evaluation_log(
         return False
 
 
-def extract_file_uuid_from_output(unified_output: EvaluationLog) -> str | None:
-    detailed = unified_output.detailed_evaluation_results
-    if detailed and detailed.file_path:
-        stem = Path(detailed.file_path).stem
-        suffix = '_samples'
-        if stem.endswith(suffix):
-            return stem[: -len(suffix)]
-    return None
-
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     args = parse_args()
@@ -216,21 +208,14 @@ if __name__ == '__main__':
                 metadata_args
             )
             if unified_output and isinstance(unified_output, List):
-                for idx, single_unified_output in enumerate(unified_output):
-                    file_uuid = (
-                        file_uuids[idx] if idx < len(file_uuids) else None
+                if len(unified_output) != len(file_uuids):
+                    raise RuntimeError(
+                        'Inspect conversion produced a different number of '
+                        'logs than the generated UUID list.'
                     )
-                    if not file_uuid:
-                        file_uuid = extract_file_uuid_from_output(
-                            single_unified_output
-                        )
-                    if not file_uuid:
-                        file_uuid = str(uuid.uuid4())
-                        logger.warning(
-                            'Missing UUID for output %s; generated %s for aggregate save.',
-                            single_unified_output.evaluation_id,
-                            file_uuid,
-                        )
+                for single_unified_output, file_uuid in zip(
+                    unified_output, file_uuids
+                ):
                     save_evaluation_log(
                         single_unified_output,
                         inspect_converter,

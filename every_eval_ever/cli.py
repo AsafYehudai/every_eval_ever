@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -108,23 +109,37 @@ def _cmd_convert_lm_eval(args: argparse.Namespace) -> int:
 
 
 def _cmd_convert_inspect(args: argparse.Namespace) -> int:
-    from every_eval_ever.converters.inspect.adapter import InspectAIAdapter
+    from every_eval_ever.converters.inspect.adapter import (
+        InspectAIAdapter,
+        list_eval_logs,
+    )
 
     adapter = InspectAIAdapter()
     metadata = _common_metadata(args)
-    metadata['file_uuid'] = str(uuid.uuid4())
 
     log_path = Path(args.log_path)
+    eval_uuids: list[str]
     if log_path.is_file():
+        eval_uuids = [str(uuid.uuid4())]
+        metadata['file_uuid'] = eval_uuids[0]
         logs = [adapter.transform_from_file(log_path, metadata)]
     elif log_path.is_dir():
+        eval_paths = list_eval_logs(log_path.absolute().as_posix())
+        eval_uuids = [str(uuid.uuid4()) for _ in eval_paths]
+        metadata['file_uuids'] = eval_uuids
         logs = adapter.transform_from_directory(log_path, metadata)
     else:
         raise FileNotFoundError(f'Path is not a file or directory: {log_path}')
 
+    if len(logs) != len(eval_uuids):
+        raise RuntimeError(
+            'Inspect conversion produced a different number of logs than '
+            'the generated UUID list.'
+        )
+
     output_dir = Path(args.output_dir)
-    for log in logs:
-        print(_write_log(log, output_dir))
+    for log, eval_uuid in zip(logs, eval_uuids):
+        print(_write_log(log, output_dir, eval_uuid=eval_uuid))
 
     print(f'Converted {len(logs)} evaluation log(s).')
     return 0
@@ -135,16 +150,39 @@ def _cmd_convert_helm(args: argparse.Namespace) -> int:
 
     adapter = HELMAdapter()
     metadata = _common_metadata(args)
-    metadata['file_uuid'] = str(uuid.uuid4())
+    log_path = Path(args.log_path)
+
+    eval_uuids: list[str]
+    if adapter._directory_contains_required_files(log_path):
+        eval_uuids = [str(uuid.uuid4())]
+        metadata['file_uuid'] = eval_uuids[0]
+    elif log_path.is_dir():
+        run_dirs = [
+            entry.path
+            for entry in os.scandir(log_path)
+            if entry.is_dir()
+            and adapter._directory_contains_required_files(entry.path)
+        ]
+        eval_uuids = [str(uuid.uuid4()) for _ in run_dirs]
+        metadata['file_uuids'] = eval_uuids
+    else:
+        raise FileNotFoundError(f'Path is not a file or directory: {log_path}')
 
     logs = adapter.transform_from_directory(
-        Path(args.log_path),
+        log_path,
         output_path=str(Path(args.output_dir) / 'helm_output'),
         metadata_args=metadata,
     )
+
+    if len(logs) != len(eval_uuids):
+        raise RuntimeError(
+            'HELM conversion produced a different number of logs than '
+            'the generated UUID list.'
+        )
+
     output_dir = Path(args.output_dir)
-    for log in logs:
-        print(_write_log(log, output_dir))
+    for log, eval_uuid in zip(logs, eval_uuids):
+        print(_write_log(log, output_dir, eval_uuid=eval_uuid))
 
     print(f'Converted {len(logs)} evaluation log(s).')
     return 0
