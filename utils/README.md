@@ -11,6 +11,7 @@ Each adapter is run with `uv run python -m utils.<name>.adapter`.
 | Adapter | Data Source | Description |
 |---------|-------------|-------------|
 | `arc_agi` | ARC Prize leaderboard JSON | Converts ARC-AGI leaderboard data and merges canonical model aliases. |
+| `artificial_analysis` | Artificial Analysis LLM API | Converts Artificial Analysis LLM benchmark, pricing, and performance results into `data/artificial-analysis-llms/`. |
 | `bfcl` | BFCL leaderboard CSV | Converts BFCL leaderboard data with per-metric evaluation names and bounded continuous scores. |
 | `sciarena` | SciArena leaderboard API | Converts SciArena leaderboard results. |
 | `global-mmlu-lite` | Kaggle API | Fetches Global MMLU Lite leaderboard results from Kaggle. |
