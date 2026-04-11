@@ -7,6 +7,8 @@ import time
 import uuid
 from pathlib import Path
 
+from every_eval_ever.helpers import SCHEMA_VERSION, sanitize_filename
+
 # Conservative provider mapping.
 # Keep the source alias in raw_model_id and derive a simple lowercase model slug.
 PROVIDER_MAP = {
@@ -95,8 +97,9 @@ def compute_metric_bounds(rows: list[dict]) -> dict[str, dict[str, float]]:
 
 
 def slugify_model_name(raw_model_id: str) -> str:
-    # Keep close to source aliases. Lowercase, preserve dots and hyphens.
-    return raw_model_id.strip().lower()
+    # Keep close to source aliases while ensuring a single path segment.
+    model_name = sanitize_filename(raw_model_id.strip().lower())
+    return model_name.replace("\\", "-").replace("/", "-")
 
 
 def normalize_model(raw_model_id: str) -> tuple[str, str]:
@@ -199,7 +202,7 @@ def make_log(
     ts = str(time.time())
 
     log = {
-        "schema_version": "0.2.2",
+        "schema_version": SCHEMA_VERSION,
         "evaluation_id": f"sciarena/{developer_name}/{model_name}/{ts}",
         "retrieved_timestamp": ts,
         "source_metadata": {

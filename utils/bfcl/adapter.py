@@ -10,9 +10,10 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
+from every_eval_ever.helpers import SCHEMA_VERSION
+
 SOURCE_CSV_URL = "https://gorilla.cs.berkeley.edu/data_overall.csv"
 SOURCE_LEADERBOARD_URL = "https://gorilla.cs.berkeley.edu/leaderboard.html"
-SCHEMA_VERSION = "0.2.2"
 
 ORG_SLUG_OVERRIDES = {
     "Anthropic": "anthropic",

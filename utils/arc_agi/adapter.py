@@ -9,6 +9,8 @@ import uuid
 from collections import defaultdict
 from pathlib import Path
 
+from every_eval_ever.helpers import SCHEMA_VERSION
+
 SOURCE_URL = "https://arcprize.org/media/data/leaderboard/evaluations.json"
 
 
@@ -267,7 +269,7 @@ def make_log(
     ts = str(time.time())
 
     log = {
-        "schema_version": "0.2.2",
+        "schema_version": SCHEMA_VERSION,
         "evaluation_id": f"arc-agi/{developer_name}/{model_name}/{ts}",
         "retrieved_timestamp": ts,
         "source_metadata": {
