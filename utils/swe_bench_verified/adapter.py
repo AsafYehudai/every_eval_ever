@@ -12,7 +12,7 @@ Each subdirectory under evaluation/verified/ is a submission with:
 Score = len(resolved) / 500  (500 total SWE-bench Verified instances)
 
 Usage:
-    cd /Users/jatinganhotra/work/EEE/every_eval_ever
+    cd every_eval_ever
     .venv/bin/python -m utils.swe_bench_verified.adapter
 """
 
