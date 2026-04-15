@@ -56,6 +56,7 @@ def parse_args():
             'HELM_Classic',
             'HELM_Instruct',
             'HELM_MMLU',
+            'HELM_AIR_Bench',
         ],
         help='HELM leaderboard name',
     )
@@ -243,7 +244,7 @@ def convert(
 
                     source_dataset_name = (
                         leaderboard_name
-                        if leaderboard_name.lower() == 'helm_mmlu'
+                        if leaderboard_name.lower() in ['helm_mmlu', "helm_air_bench"]
                         else dataset_name
                     )
 
@@ -382,7 +383,7 @@ def main():
 
     if not leaderboard_name.startswith("helm_"):
         raise ValueError("leaderboard_name must start with helm_")
-    leaderboard_id = leaderboard_name.removeprefix("helm_")
+    leaderboard_id = leaderboard_name.removeprefix("helm_").replace("_", "-")
     source_data_url = get_source_data_url(leaderboard_id, args.leaderboard_version)
 
     print(f'Fetching {leaderboard_name} {args.leaderboard_version} data from {source_data_url}')
