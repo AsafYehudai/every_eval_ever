@@ -263,15 +263,17 @@ def make_log(
     developer_name: str,
     model_name: str,
     metric_bounds: dict[str, dict[str, float]],
+    retrieved_timestamp: str,
 ) -> tuple[dict, str, str]:
     primary_raw_model_id = choose_primary_raw_model_id(rows_for_canonical, developer_name)
     all_aliases = sorted({row["modelId"] for row in rows_for_canonical})
-    ts = str(time.time())
 
     log = {
         "schema_version": SCHEMA_VERSION,
-        "evaluation_id": f"arc-agi/{developer_name}/{model_name}/{ts}",
-        "retrieved_timestamp": ts,
+        "evaluation_id": (
+            f"arc-agi/{developer_name}/{model_name}/{retrieved_timestamp}"
+        ),
+        "retrieved_timestamp": retrieved_timestamp,
         "source_metadata": {
             "source_name": "ARC Prize leaderboard JSON",
             "source_type": "documentation",
@@ -321,6 +323,7 @@ def main() -> None:
     rows = load_rows(args.input_json)
     rows = [r for r in rows if r.get("display") is True]
     metric_bounds = compute_metric_bounds(rows)
+    retrieved_timestamp = str(time.time())
 
     by_canonical = defaultdict(list)
     for row in rows:
@@ -334,6 +337,7 @@ def main() -> None:
             developer_name,
             model_name,
             metric_bounds,
+            retrieved_timestamp,
         )
         out_path = write_log(log, args.output_dir, developer, model)
         print(out_path)

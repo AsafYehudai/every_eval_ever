@@ -195,16 +195,19 @@ def make_results(
 
 
 def make_log(
-    row: dict, metric_bounds: dict[str, dict[str, float]]
+    row: dict,
+    metric_bounds: dict[str, dict[str, float]],
+    retrieved_timestamp: str,
 ) -> tuple[dict, str, str]:
     raw_model_id = row["modelId"]
     developer_name, model_name = normalize_model(raw_model_id)
-    ts = str(time.time())
 
     log = {
         "schema_version": SCHEMA_VERSION,
-        "evaluation_id": f"sciarena/{developer_name}/{model_name}/{ts}",
-        "retrieved_timestamp": ts,
+        "evaluation_id": (
+            f"sciarena/{developer_name}/{model_name}/{retrieved_timestamp}"
+        ),
+        "retrieved_timestamp": retrieved_timestamp,
         "source_metadata": {
             "source_name": "SciArena leaderboard API",
             "source_type": "documentation",
@@ -244,8 +247,9 @@ def export_one(
     row: dict,
     out_root: Path,
     metric_bounds: dict[str, dict[str, float]],
+    retrieved_timestamp: str,
 ) -> Path:
-    log, developer, model = make_log(row, metric_bounds)
+    log, developer, model = make_log(row, metric_bounds, retrieved_timestamp)
     return write_log(log, out_root, developer, model)
 
 
@@ -256,6 +260,7 @@ def main() -> None:
     args = parser.parse_args()
 
     rows = load_rows(args.input_json)
+    retrieved_timestamp = str(time.time())
 
     missing = [row["modelId"] for row in rows if row["modelId"] not in PROVIDER_MAP]
     if missing:
@@ -265,7 +270,9 @@ def main() -> None:
 
     exported = 0
     for row in rows:
-        out_path = export_one(row, args.output_dir, metric_bounds)
+        out_path = export_one(
+            row, args.output_dir, metric_bounds, retrieved_timestamp
+        )
         print(out_path)
         exported += 1
 

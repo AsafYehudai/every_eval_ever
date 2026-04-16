@@ -515,12 +515,15 @@ def make_results(row: dict, observed_max_scores: dict[str, float]) -> list[dict]
     return results
 
 
-def make_log(row: dict, observed_max_scores: dict[str, float]) -> tuple[dict, str, str]:
+def make_log(
+    row: dict,
+    observed_max_scores: dict[str, float],
+    retrieved_timestamp: str,
+) -> tuple[dict, str, str]:
     raw_model = row["Model"]
     org = row["Organization"]
     developer = developer_slug(org)
     model = model_slug(raw_model)
-    ts = str(time.time())
 
     additional_details = {
         "raw_model_name": raw_model,
@@ -535,8 +538,8 @@ def make_log(row: dict, observed_max_scores: dict[str, float]) -> tuple[dict, st
 
     log = {
         "schema_version": SCHEMA_VERSION,
-        "evaluation_id": f"bfcl/{developer}/{model}/{ts}",
-        "retrieved_timestamp": ts,
+        "evaluation_id": f"bfcl/{developer}/{model}/{retrieved_timestamp}",
+        "retrieved_timestamp": retrieved_timestamp,
         "source_metadata": {
             "source_name": "BFCL leaderboard CSV",
             "source_type": "documentation",
@@ -573,8 +576,15 @@ def write_log(log: dict, out_root: Path, developer: str, model: str) -> Path:
     return out_path
 
 
-def export_one(row: dict, out_root: Path, observed_max_scores: dict[str, float]) -> Path:
-    log, developer, model = make_log(row, observed_max_scores)
+def export_one(
+    row: dict,
+    out_root: Path,
+    observed_max_scores: dict[str, float],
+    retrieved_timestamp: str,
+) -> Path:
+    log, developer, model = make_log(
+        row, observed_max_scores, retrieved_timestamp
+    )
     return write_log(log, out_root, developer, model)
 
 
@@ -592,17 +602,27 @@ def main() -> None:
 
     rows = load_rows(args.input_csv)
     observed_max_scores = compute_observed_max_scores(rows)
+    retrieved_timestamp = str(time.time())
 
     if args.model is not None:
         matches = [row for row in rows if row["Model"] == args.model]
         if not matches:
             raise SystemExit(f"Model {args.model!r} not found in {args.input_csv}")
-        print(export_one(matches[0], args.output_dir, observed_max_scores))
+        print(
+            export_one(
+                matches[0],
+                args.output_dir,
+                observed_max_scores,
+                retrieved_timestamp,
+            )
+        )
         return
 
     exported = 0
     for row in rows:
-        out_path = export_one(row, args.output_dir, observed_max_scores)
+        out_path = export_one(
+            row, args.output_dir, observed_max_scores, retrieved_timestamp
+        )
         print(out_path)
         exported += 1
 
