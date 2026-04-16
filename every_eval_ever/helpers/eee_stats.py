@@ -36,7 +36,7 @@ def print_startup_summary(
     instance_urls: List[str],
 ) -> None:
     print(f'\n{SEP}')
-    print('  EVERY EVAL EVER STATS')
+    print('EVERY EVAL EVER STATS')
     print(SUB)
     print(f'datastore: {datastore}')
     print(f'tables:    {table_name}_schema, {table_name}_instances')
@@ -77,15 +77,15 @@ def build_instance_select_sql(available_columns: set[str]) -> str:
         scalar_column('sample_id', 'VARCHAR'),
         scalar_column('sample_hash', 'VARCHAR'),
         scalar_column('interaction_type', 'VARCHAR'),
-        json_column('input', 'input_json'),
-        json_column('output', 'output_json'),
-        json_column('messages', 'messages_json'),
-        json_column('answer_attribution', 'answer_attribution_json'),
-        json_column('evaluation', 'evaluation_json'),
-        json_column('token_usage', 'token_usage_json'),
-        json_column('performance', 'performance_json'),
+        json_column('input', 'input'),
+        json_column('output', 'output'),
+        json_column('messages', 'messages'),
+        json_column('answer_attribution', 'answer_attribution'),
+        json_column('evaluation', 'evaluation'),
+        json_column('token_usage', 'token_usage'),
+        json_column('performance', 'performance'),
         scalar_column('error', 'VARCHAR'),
-        json_column('metadata', 'metadata_json'),
+        json_column('metadata', 'metadata'),
         scalar_column('filename', 'VARCHAR'),
     ]
 
@@ -267,15 +267,15 @@ def main():
                     sample_id VARCHAR NOT NULL,
                     sample_hash VARCHAR,
                     interaction_type VARCHAR NOT NULL,
-                    input_json JSON NOT NULL,
-                    output_json JSON,
-                    messages_json JSON,
-                    answer_attribution_json JSON NOT NULL,
-                    evaluation_json JSON NOT NULL,
-                    token_usage_json JSON,
-                    performance_json JSON,
+                    input JSON NOT NULL,
+                    output JSON,
+                    messages JSON,
+                    answer_attribution JSON NOT NULL,
+                    evaluation JSON NOT NULL,
+                    token_usage JSON,
+                    performance JSON,
                     error VARCHAR,
-                    metadata_json JSON,
+                    metadata JSON,
                     filename VARCHAR NOT NULL
                 )
                 """
