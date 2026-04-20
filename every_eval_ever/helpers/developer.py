@@ -72,7 +72,7 @@ DEVELOPER_PATTERNS = {
     'olmo': 'allenai',
     'nova': 'amazon',
     'grok': 'xai',
-    'kimi': 'moonshot',
+    'kimi': 'moonshotai',
 }
 
 
