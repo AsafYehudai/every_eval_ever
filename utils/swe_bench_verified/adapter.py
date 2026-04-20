@@ -23,9 +23,6 @@ import tempfile
 import time
 from pathlib import Path
 
-import yaml
-from datasets import load_dataset
-
 from every_eval_ever.eval_types import (
     AgenticEvalConfig,
     AvailableTool,
@@ -42,7 +39,7 @@ from every_eval_ever.eval_types import (
     SourceDataUrl,
     SourceMetadata,
 )
-from every_eval_ever.helpers import get_developer, get_model_id, save_evaluation_log
+from every_eval_ever.helpers import SCHEMA_VERSION, get_developer, get_model_id, save_evaluation_log
 
 SWE_BENCH_REPO = "https://github.com/swe-bench/experiments"
 SWE_BENCH_SUBDIR = "evaluation/verified"
@@ -99,6 +96,13 @@ def get_primary_model(tags: dict, info: dict, dir_name: str) -> str:
 def convert_submission(submission_dir: Path, retrieved_timestamp: str, total_instances: int) -> EvaluationLog:
     """Convert a single SWE-bench submission directory to an EvaluationLog."""
     dir_name = submission_dir.name
+
+    try:
+        import yaml
+    except ImportError as e:
+        raise ImportError(
+            "pyyaml is required to run this adapter. Install it with: pip install pyyaml"
+        ) from e
 
     # Read metadata
     with open(submission_dir / "metadata.yaml") as f:
@@ -188,7 +192,7 @@ def convert_submission(submission_dir: Path, retrieved_timestamp: str, total_ins
     )
 
     return EvaluationLog(
-        schema_version="0.2.2",
+        schema_version=SCHEMA_VERSION,
         evaluation_id=eval_id,
         retrieved_timestamp=retrieved_timestamp,
         evaluation_timestamp=evaluation_timestamp,
@@ -211,6 +215,13 @@ def convert_submission(submission_dir: Path, retrieved_timestamp: str, total_ins
 
 
 def main():
+    try:
+        from datasets import load_dataset
+    except ImportError as e:
+        raise ImportError(
+            "datasets is required to run this adapter. Install it with: pip install datasets"
+        ) from e
+
     retrieved_timestamp = str(time.time())
     count = 0
     errors = 0
