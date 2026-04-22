@@ -491,6 +491,7 @@ def make_log(
     row_meta: dict[str, str],
     bounds: dict[str, dict[str, float]],
     benchmark_version: str,
+    eval_library_version: str,
     public_source_urls: list[str],
     benchmark_reference_urls: list[str],
     source_metadata_details: dict[str, str],
@@ -615,7 +616,7 @@ def make_log(
         ),
         eval_library=EvalLibrary(
             name="cocoabench",
-            version=args.eval_library_version,
+            version=eval_library_version,
         ),
         model_info=ModelInfo(
             name=row_meta["model_display_name"],
@@ -659,7 +660,6 @@ def validate_row_meta(agent_label: str, row_meta: dict[str, str]) -> None:
 
 
 def main() -> None:
-    global args
     args = parse_args()
 
     rows = load_rows(Path(args.csv))
@@ -687,6 +687,7 @@ def main() -> None:
             row_meta=row_meta,
             bounds=bounds,
             benchmark_version=args.benchmark_version,
+            eval_library_version=args.eval_library_version,
             public_source_urls=public_source_urls,
             benchmark_reference_urls=benchmark_reference_urls,
             source_metadata_details=source_metadata_details,
