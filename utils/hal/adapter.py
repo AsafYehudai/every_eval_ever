@@ -12,7 +12,7 @@ Each benchmark page embeds the leaderboard as an HTML table. This adapter:
   3. Produces one EEE JSON file per (benchmark, agent, model) entry
 
 Output structure:
-    data/hal-{benchmark_slug}/{developer}/{model_slug}/{uuid}.json
+    data/{benchmark_output_name}/{developer}/{model_slug}/{uuid}.json
 
 Usage:
     cd every_eval_ever
@@ -250,20 +250,10 @@ MODEL_DEVELOPER_MAP: dict[str, str] = {
     # Mistral
     "mistral": "mistralai",
     "mixtral": "mistralai",
-    # Alibaba
-    "qwen": "alibaba",
+    # Qwen / Alibaba — use "qwen" to match all other adapters in this repo
+    "qwen": "qwen",
     # Microsoft
     "phi": "microsoft",
-}
-
-# Explicit full-name overrides for models that are ambiguous
-FULL_NAME_DEVELOPER_OVERRIDES: dict[str, str] = {
-    "o3": "openai",
-    "o4-mini": "openai",
-    "gpt-5": "openai",
-    "gpt-4.1": "openai",
-    "gpt-4o": "openai",
-    "gpt-4": "openai",
 }
 
 # Maps cleaned model name → canonical EEE model ID
@@ -339,10 +329,18 @@ def get_model_id(raw_model: str) -> str:
     """
     cleaned = _normalize_model_name(raw_model)
 
-    # Check overrides
-    for key, model_id in MODEL_ID_OVERRIDES.items():
-        if cleaned == key or cleaned.startswith(key):
+    # Check overrides — longest key first to avoid shorter keys shadowing more
+    # specific ones (e.g. "gpt-4.1" must not match "gpt-4.1-mini").
+    # A prefix match is only accepted when the remaining suffix is solely a
+    # known inference-effort token (low / medium / high).
+    _EFFORT_SUFFIX = re.compile(r'^(low|medium|high)$', re.IGNORECASE)
+    for key, model_id in sorted(MODEL_ID_OVERRIDES.items(), key=lambda kv: len(kv[0]), reverse=True):
+        if cleaned == key:
             return model_id
+        if cleaned.startswith(f"{key} "):
+            suffix = cleaned[len(key):].strip()
+            if _EFFORT_SUFFIX.fullmatch(suffix):
+                return model_id
 
     # Auto-derive: developer/slugified-name
     developer = get_developer_for_model(raw_model)
@@ -454,11 +452,8 @@ def _parse_accuracy_cell(raw: str) -> tuple[float, Optional[str], Optional[str]]
         notes = m_notes.group(1)
 
     accuracy = _parse_percent(raw)
-    ci = _parse_ci(raw) if '/' in raw and '%' not in raw.split('(')[0].replace(raw.split('%')[0], '') else None
-    # Better CI extraction: look for pattern after the % sign
     ci_m = re.search(r'%\s*\(([+-][\d.]+/[+-][\d.]+)\)', raw)
-    if ci_m:
-        ci = ci_m.group(1)
+    ci = ci_m.group(1) if ci_m else None
     return accuracy or 0.0, ci, notes
 
 
