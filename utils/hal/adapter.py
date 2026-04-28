@@ -12,7 +12,7 @@ Each benchmark page embeds the leaderboard as an HTML table. This adapter:
   3. Produces one EEE JSON file per (benchmark, agent, model) entry
 
 Output structure:
-    data/{benchmark_output_name}/{developer}/{model_slug}/{uuid}.json
+    data/hal-{benchmark_slug}/{developer}/{model_slug}/{uuid}.json
 
 Usage:
     cd every_eval_ever
@@ -61,29 +61,38 @@ class BenchmarkDef:
     # Tools available to agents in this benchmark
     tools: list[ToolDef] = field(default_factory=list)
     extra_metrics: list[dict] = field(default_factory=list)  # GAIA levels etc.
+    # Optional extra key/value pairs added to source_data.additional_details
+    source_data_details: dict[str, str] = field(default_factory=dict)
 
 
 BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="assistantbench",
         name="AssistantBench",
-        output_name="assistantbench",
+        output_name="hal-assistantbench",
         category="Web Assistance",
         dataset_url="https://assistantbench.github.io",
         description=(
-            "AssistantBench evaluates AI agents on 214 realistic, time-consuming, "
-            "and automatically verifiable tasks based on real human needs."
+            "HAL evaluates AI agents on a 33-task split of AssistantBench, "
+            "a benchmark of realistic, time-consuming, and automatically verifiable "
+            "web assistance tasks based on real human needs. "
+            "The full benchmark contains 214 tasks."
         ),
-        metric_description="Accuracy on 214 real-world web assistance tasks (0.0–1.0)",
+        metric_description="Accuracy on HAL's 33-task AssistantBench split (0.0–1.0)",
         tools=[
             ToolDef("browser", "Navigate and interact with live web pages"),
             ToolDef("web_search", "Search the web for information"),
         ],
+        source_data_details={
+            "tasks_evaluated": "33",
+            "full_benchmark_size": "214",
+            "note": "HAL evaluates on a 33-task subset; full AssistantBench has 214 tasks",
+        },
     ),
     BenchmarkDef(
         slug="corebench_hard",
         name="CORE-Bench Hard",
-        output_name="corebench-hard",
+        output_name="hal-corebench-hard",
         category="Scientific Programming",
         dataset_url="https://github.com/siegelz/core-bench",
         description=(
@@ -101,7 +110,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="gaia",
         name="GAIA",
-        output_name="gaia",
+        output_name="hal-gaia",
         category="Web Assistance",
         dataset_url="https://huggingface.co/datasets/gaia-benchmark/GAIA",
         description=(
@@ -125,7 +134,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="online_mind2web",
         name="Online Mind2Web",
-        output_name="online-mind2web",
+        output_name="hal-online-mind2web",
         category="Web Assistance",
         dataset_url="https://osu-nlp-group.github.io/Mind2Web/",
         description=(
@@ -143,7 +152,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="scicode",
         name="Scicode",
-        output_name="scicode",
+        output_name="hal-scicode",
         category="Scientific Programming",
         dataset_url="https://scicode-bench.github.io",
         description=(
@@ -159,7 +168,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="scienceagentbench",
         name="ScienceAgentBench",
-        output_name="scienceagentbench",
+        output_name="hal-scienceagentbench",
         category="Scientific Programming",
         dataset_url="https://osu-nlp-group.github.io/ScienceAgentBench/",
         description=(
@@ -177,7 +186,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="swebench_verified_mini",
         name="SWE-bench Verified Mini",
-        output_name="swebench-verified-mini",
+        output_name="hal-swebench-verified-mini",
         category="Software Engineering",
         dataset_url="https://www.swebench.com",
         description=(
@@ -194,7 +203,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="taubench_airline",
         name="TAU-bench Airline",
-        output_name="taubench-airline",
+        output_name="hal-taubench-airline",
         category="Customer Service",
         dataset_url="https://github.com/sierra-research/tau-bench",
         description=(
@@ -209,7 +218,7 @@ BENCHMARKS: list[BenchmarkDef] = [
     BenchmarkDef(
         slug="usaco",
         name="USACO",
-        output_name="usaco",
+        output_name="hal-usaco",
         category="Programming",
         dataset_url="https://usaco.guide",
         description=(
@@ -540,7 +549,7 @@ def parse_table(html: str, benchmark: BenchmarkDef) -> list[LeaderboardRow]:
 # ---------------------------------------------------------------------------
 
 def build_source_data(benchmark: BenchmarkDef) -> dict:
-    return {
+    result: dict = {
         "source_type": "url",
         "dataset_name": benchmark.name,
         "url": [
@@ -548,6 +557,9 @@ def build_source_data(benchmark: BenchmarkDef) -> dict:
             f"{HAL_BASE_URL}/{benchmark.slug}",
         ],
     }
+    if benchmark.source_data_details:
+        result["additional_details"] = benchmark.source_data_details
+    return result
 
 
 def build_evaluation_result(
@@ -615,10 +627,14 @@ def build_eee_record(
 
     effort = _effort_level(row.model_raw)
     agent_slug = slugify(row.agent_name)
+    # Use the raw HAL model name (slugified) in the evaluation_id so that
+    # variants that share the same normalized model_info.id — e.g. effort
+    # levels ("High") or dated releases ("April 2025") — produce distinct IDs.
+    raw_model_slug = slugify(row.model_raw)
 
     eval_id = (
-        f"{benchmark.output_name}/{slugify(model_id)}"
-        f"/{agent_slug}/{retrieved_timestamp}"
+        f"{benchmark.output_name}/{agent_slug}"
+        f"/{raw_model_slug}/{retrieved_timestamp}"
     )
 
     # Primary evaluation result
